@@ -499,6 +499,25 @@ describe("ModelResolver", () => {
     }),
   )
 
+  it.effect("defaults package-less custom endpoints to the OpenAI-compatible runtime", () =>
+    Effect.gen(function* () {
+      const resolved = yield* ModelResolver.fromCatalogModel(
+        model("", {
+          providerID: Provider.ID.make("new-api"),
+          modelID: "cpac/claude-sonnet-5-5-max",
+          settings: { baseURL: "https://new-api.example/v1" },
+          headers: {},
+          body: {},
+        }),
+      )
+
+      expect(resolved.route.id).toBe("openai-compatible-chat")
+      expect(resolved.route.endpoint.baseURL).toBe("https://new-api.example/v1")
+      expect(String(resolved.provider)).toBe("new-api")
+      expect(resolved.route.providerMetadataKey).toBe("new-api")
+    }),
+  )
+
   it.effect("resolves provider URLs from environment without mutating the catalog model", () =>
     withEnv({ ACME_HOST: "api.acme.test" }, () =>
       Effect.gen(function* () {

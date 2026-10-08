@@ -257,8 +257,17 @@ const resolveCatalogModel = Effect.fn("ModelResolver.resolveCatalogModel")(funct
 })
 
 function prepareRuntimeModel(model: RuntimeInfo) {
-  if (model.settings?.apiKey !== "") return model
-  return { ...model, settings: Struct.omit(model.settings, ["apiKey"]) }
+  const settings =
+    model.settings?.apiKey === ""
+      ? Struct.omit(model.settings, ["apiKey"])
+      : model.settings
+  if (model.package) return settings === model.settings ? model : { ...model, settings }
+  if (typeof settings?.baseURL !== "string") return settings === model.settings ? model : { ...model, settings }
+  return {
+    ...model,
+    package: "@opencode/ai/providers/openai-compatible",
+    settings: settings.provider === undefined ? { ...settings, provider: model.canonical ?? model.providerID } : settings,
+  }
 }
 
 function validateProviderVariables(
